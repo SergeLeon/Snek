@@ -6,6 +6,16 @@ pygame.init()
 
 # размер окна
 size = [1280, 720]
+cell_size = 40
+
+size_multiplier = 0.75
+
+size = [round(size[0] * size_multiplier), round(size[1] * size_multiplier)]
+cell_size = round(cell_size * size_multiplier)
+
+x_cells = int(size[0] / cell_size)
+y_cells = int(size[1] / cell_size)
+
 window = pygame.display.set_mode(size)
 
 pygame.display.set_caption("Snek game")
@@ -13,8 +23,6 @@ pygame.display.set_caption("Snek game")
 screen = pygame.Surface(size)
 
 font = pygame.font.Font("AtariClassic-Regular.ttf", 36)
-
-cell_size = 40
 
 
 class Snake():
@@ -29,20 +37,28 @@ class Snake():
         self.snake = [[16, 10], [16, 9], self.head]
         self.move_round = "up"
 
+    def get_score(self):
+        return self.score
+
     def render(self):
         for block in self.snake:
-            pygame.draw.rect(screen, [0, 255, 0], (block[0] * cell_size, block[1] * cell_size, cell_size, cell_size))
+            if block == self.head:
+                pygame.draw.rect(screen, [0, 160, 0],
+                                 (block[0] * cell_size, block[1] * cell_size, cell_size, cell_size))
+            else:
+                pygame.draw.rect(screen, [0, 200, 0],
+                                 (block[0] * cell_size, block[1] * cell_size, cell_size, cell_size))
 
     def move(self, apple_list):
         pushed_keys = pygame.key.get_pressed()
 
-        if pushed_keys[pygame.K_w] and self.move_round != "down":
+        if (pushed_keys[pygame.K_w] or pushed_keys[pygame.K_UP]) and self.move_round != "down":
             self.move_round = "up"
-        if pushed_keys[pygame.K_s] and self.move_round != "up":
+        if (pushed_keys[pygame.K_s] or pushed_keys[pygame.K_DOWN]) and self.move_round != "up":
             self.move_round = "down"
-        if pushed_keys[pygame.K_d] and self.move_round != "left":
+        if (pushed_keys[pygame.K_d] or pushed_keys[pygame.K_RIGHT]) and self.move_round != "left":
             self.move_round = "right"
-        if pushed_keys[pygame.K_a] and self.move_round != "right":
+        if (pushed_keys[pygame.K_a] or pushed_keys[pygame.K_LEFT]) and self.move_round != "right":
             self.move_round = "left"
 
         self.head = [self.head[0] + self.moves[self.move_round][0], self.head[1] + self.moves[self.move_round][1]]
@@ -51,13 +67,12 @@ class Snake():
         apple_eaten = False
         for apple in apple_list:
             if self.check_apple_contact(apple):
-                apple.repose()
+                apple.repose(self.snake)
                 self.score += 1
                 apple_eaten = True
 
         if not apple_eaten:
             self.snake.pop(0)
-
 
     def check_apple_contact(self, apple):
         if self.head == apple.get_cords():
@@ -67,48 +82,53 @@ class Snake():
     def check_death(self):
         if self.head in self.snake[0:-1]:
             return True
-        if self.head[0] <= -1 or self.head[0] >= 32 or self.head[1] <= -1 or self.head[1] >= 18:
+        if self.head[0] <= -1 or self.head[0] >= x_cells or self.head[1] <= -1 or self.head[1] >= y_cells:
             return True
         return False
 
 
 class Apple():
     def __init__(self):
-        self.x = randint(1, 31)
-        self.y = randint(1, 17)
+        self.x = randint(0, x_cells - 1)
+        self.y = randint(0, y_cells - 1)
         self.color = [255, 0, 0]
 
     def render(self, cell_size):
         pygame.draw.circle(screen, self.color,
                            (self.x * cell_size + cell_size // 2 + 1, self.y * cell_size + cell_size // 2 + 1),
-                           cell_size // 2 - 1)
+                           cell_size // 2 - 3)
+        pygame.draw.circle(screen, [180,10,10],
+                           (self.x * cell_size + cell_size // 2 + 1, self.y * cell_size + cell_size // 2 + 1),
+                           cell_size // 2 - 2, 2)
 
     def get_cords(self):
         return [self.x, self.y]
 
-    def repose(self):
-        self.x = randint(1, 31)
-        self.y = randint(1, 17)
+    def repose(self, snake):
+        while [self.x, self.y] in snake:
+            self.x = randint(1, x_cells - 1)
+            self.y = randint(1, y_cells - 1)
+
 
 
 def render_field(window_size, cell_size):
     depth = 2
-    for x in range(-1, round(window_size[0] / cell_size) + 1):
+    for x in range(1, x_cells + 1):
         pygame.draw.line(screen, [0, 0, 0], [x * cell_size, 0], [x * cell_size, window_size[1]], depth)
-    for y in range(-1, round(window_size[1] / cell_size) + 1):
+    for y in range(1, y_cells + 1):
         pygame.draw.line(screen, [0, 0, 0], [0, y * cell_size], [window_size[0], y * cell_size], depth)
 
 
 def show_score(score):
-    text = font.render(f"score: {score}", 1, (0, 0, 0))
-    text_pos = (442, 20)
+    text = font.render(f"Score:{str(score).zfill(2)}", 1, (0, 0, 0), [144, 238, 144])
+    text_pos = (round(size[0] / 2 - 143), round(size[1] / 2 - 33))
 
     screen.blit(text, text_pos)
 
 
 def start_game():
-    apple_list = [Apple()]
     snek = Snake()
+    apple_list = [Apple()]
 
     running_game = True
     while running_game:
@@ -117,9 +137,9 @@ def start_game():
             if e.type == pygame.QUIT or pygame.key.get_pressed()[pygame.K_ESCAPE]:
                 running_game = False
 
-        screen.fill([144, 238, 144])
-
         if not snek.check_death():
+            screen.fill([144, 238, 144])
+
             for apple in apple_list:
                 apple.render(cell_size)
 
@@ -131,8 +151,11 @@ def start_game():
 
             window.blit(screen, [0, 0])
         else:
-            text = font.render("You Lose", 1, (0, 0, 0))
-            screen.blit(text, (445, 300))
+
+            text = font.render("You Lose", 1, (0, 0, 0), [144, 238, 144])
+            screen.blit(text, (round(size[0] / 2 - 143), round(size[1] / 2 - 70)))
+
+            show_score(snek.get_score())
 
         window.blit(screen, [0, 0])
         pygame.display.flip()
