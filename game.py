@@ -33,7 +33,7 @@ class Snake():
         for block in self.snake:
             pygame.draw.rect(screen, [0, 255, 0], (block[0] * cell_size, block[1] * cell_size, cell_size, cell_size))
 
-    def move(self):
+    def move(self, apple_list):
         pushed_keys = pygame.key.get_pressed()
 
         if pushed_keys[pygame.K_w] and self.move_round != "down":
@@ -48,12 +48,16 @@ class Snake():
         self.head = [self.head[0] + self.moves[self.move_round][0], self.head[1] + self.moves[self.move_round][1]]
         self.snake.append(self.head)
 
+        apple_eaten = False
         for apple in apple_list:
             if self.check_apple_contact(apple):
                 apple.repose()
                 self.score += 1
-            else:
-                self.snake.pop(0)
+                apple_eaten = True
+
+        if not apple_eaten:
+            self.snake.pop(0)
+
 
     def check_apple_contact(self, apple):
         if self.head == apple.get_cords():
@@ -63,17 +67,15 @@ class Snake():
     def check_death(self):
         if self.head in self.snake[0:-1]:
             return True
+        if self.head[0] <= -1 or self.head[0] >= 32 or self.head[1] <= -1 or self.head[1] >= 18:
+            return True
         return False
-
-
-apple_list = []
 
 
 class Apple():
     def __init__(self):
-        apple_list.append(self)
-        self.x = randint(1, 32)
-        self.y = randint(1, 18)
+        self.x = randint(1, 31)
+        self.y = randint(1, 17)
         self.color = [255, 0, 0]
 
     def render(self, cell_size):
@@ -85,8 +87,8 @@ class Apple():
         return [self.x, self.y]
 
     def repose(self):
-        self.x = randint(1, 32)
-        self.y = randint(1, 18)
+        self.x = randint(1, 31)
+        self.y = randint(1, 17)
 
 
 def render_field(window_size, cell_size):
@@ -105,7 +107,7 @@ def show_score(score):
 
 
 def start_game():
-    apple = Apple()
+    apple_list = [Apple()]
     snek = Snake()
 
     running_game = True
@@ -121,7 +123,7 @@ def start_game():
             for apple in apple_list:
                 apple.render(cell_size)
 
-            snek.move()
+            snek.move(apple_list)
 
             snek.render()
 
