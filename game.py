@@ -5,27 +5,34 @@ import pygame
 pygame.init()
 
 # размер окна
-size = [1280, 720]
+win_size = [1280, 720]
 cell_size = 40
 
-size_multiplier = 0.75
+size_mult = 1
 
-size = [round(size[0] * size_multiplier), round(size[1] * size_multiplier)]
-cell_size = round(cell_size * size_multiplier)
 
-x_cells = int(size[0] / cell_size)
-y_cells = int(size[1] / cell_size)
+def resize(obj):
+    if type(obj) == int:
+        return round(obj * size_mult)
+    return [round(x * size_mult) for x in win_size]
 
-window = pygame.display.set_mode(size)
+
+win_size = resize(win_size)
+cell_size = round(cell_size * size_mult)
+
+x_cells = int(win_size[0] / cell_size)
+y_cells = int(win_size[1] / cell_size)
+
+window = pygame.display.set_mode(win_size)
 
 pygame.display.set_caption("Snek game")
 
-screen = pygame.Surface(size)
+screen = pygame.Surface(win_size)
 
 font = pygame.font.Font("AtariClassic-Regular.ttf", 36)
 
 
-class Snake():
+class Snake:
     def __init__(self):
         self.moves = {"hold": [0, 0],
                       "up": [0, -1],
@@ -44,10 +51,10 @@ class Snake():
         for block in self.snake:
             if block == self.head:
                 pygame.draw.rect(screen, [0, 160, 0],
-                                 (block[0] * cell_size, block[1] * cell_size, cell_size, cell_size))
+                                 (*[cord * cell_size for cord in block], cell_size, cell_size))
             else:
                 pygame.draw.rect(screen, [0, 200, 0],
-                                 (block[0] * cell_size, block[1] * cell_size, cell_size, cell_size))
+                                 (*[cord * cell_size for cord in block], cell_size, cell_size))
 
     def move(self, apple_list):
         pushed_keys = pygame.key.get_pressed()
@@ -87,7 +94,7 @@ class Snake():
         return False
 
 
-class Apple():
+class Apple:
     def __init__(self):
         self.x = randint(0, x_cells - 1)
         self.y = randint(0, y_cells - 1)
@@ -97,7 +104,7 @@ class Apple():
         pygame.draw.circle(screen, self.color,
                            (self.x * cell_size + cell_size // 2 + 1, self.y * cell_size + cell_size // 2 + 1),
                            cell_size // 2 - 3)
-        pygame.draw.circle(screen, [180,10,10],
+        pygame.draw.circle(screen, [180, 10, 10],
                            (self.x * cell_size + cell_size // 2 + 1, self.y * cell_size + cell_size // 2 + 1),
                            cell_size // 2 - 2, 2)
 
@@ -110,18 +117,17 @@ class Apple():
             self.y = randint(1, y_cells - 1)
 
 
-
 def render_field(window_size, cell_size):
     depth = 2
-    for x in range(1, x_cells + 1):
+    for x in range(0, x_cells + 1):
         pygame.draw.line(screen, [0, 0, 0], [x * cell_size, 0], [x * cell_size, window_size[1]], depth)
-    for y in range(1, y_cells + 1):
+    for y in range(0, y_cells + 1):
         pygame.draw.line(screen, [0, 0, 0], [0, y * cell_size], [window_size[0], y * cell_size], depth)
 
 
 def show_score(score):
     text = font.render(f"Score:{str(score).zfill(2)}", 1, (0, 0, 0), [144, 238, 144])
-    text_pos = (round(size[0] / 2 - 143), round(size[1] / 2 - 33))
+    text_pos = (round(win_size[0] / 2 - 143), round(win_size[1] / 2 - 33))
 
     screen.blit(text, text_pos)
 
@@ -147,13 +153,13 @@ def start_game():
 
             snek.render()
 
-            render_field(size, cell_size)
+            render_field(win_size, cell_size)
 
             window.blit(screen, [0, 0])
         else:
 
             text = font.render("You Lose", 1, (0, 0, 0), [144, 238, 144])
-            screen.blit(text, (round(size[0] / 2 - 143), round(size[1] / 2 - 70)))
+            screen.blit(text, (round(win_size[0] / 2 - 143), round(win_size[1] / 2 - 70)))
 
             show_score(snek.get_score())
 

@@ -11,12 +11,18 @@ pygame.init()
 pygame.mixer.init(buffer=16)
 
 # размер окна
-size = [1280, 720]
-window = pygame.display.set_mode(size)
+win_size = [1280, 720]
+
+size_mult = 1
+win_size = [round(x * size_mult) for x in win_size]
+
+window = pygame.display.set_mode(win_size)
+
 # задайте имя
 pygame.display.set_caption("SneK menu")
 
-screen = pygame.Surface(size)
+screen = pygame.Surface(win_size)
+#screen = pygame.display.set_mode(win_size, pygame.FULLSCREEN)
 
 font = pygame.font.Font("AtariClassic-Regular.ttf", 36)
 
@@ -49,9 +55,6 @@ button_volume = Button(surface=pygame.Surface([250, 100]), size=[250, 100], cord
 button_turn_player_count = Button(surface=pygame.Surface([100, 100]), size=[100, 100], cords=[1160, 600],
                                   text=["1P", [1175, 630]],
                                   action="""if button.text[0]=='1P':
-                                        player_count = 2
-                                        button.text[0] = '2P'
-                                    \nelif button.text[0]=='2P':
                                         player_count = 0
                                         button.text[0] = 'AI'
                                     \nelse:
