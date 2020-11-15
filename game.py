@@ -2,8 +2,6 @@ from random import randint
 
 import pygame
 
-import sound
-
 pygame.init()
 
 # размер окна
