@@ -5,7 +5,7 @@ from random import randint
 import pygame
 
 import game
-import sound
+#import sound
 
 pygame.init()
 pygame.mixer.init(buffer=16)
