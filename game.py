@@ -128,7 +128,7 @@ def start_game():
             snek.render()
 
             render_field(size, cell_size)
-            # отображение окна
+
             window.blit(screen, [0, 0])
         else:
             text = font.render("You Lose", 1, (0, 0, 0))
