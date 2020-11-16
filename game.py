@@ -5,7 +5,9 @@ import pygame
 pygame.init()
 
 # размер окна
-win_size = [1280, 720]
+win_width = 1280
+win_height = 720
+win_size = [win_width, win_height]
 cell_size = 40
 
 size_mult = 1
@@ -14,14 +16,16 @@ size_mult = 1
 def resize(obj):
     if type(obj) == int:
         return round(obj * size_mult)
-    return [round(x * size_mult) for x in win_size]
+    return [round(x * size_mult) for x in obj]
 
 
+win_width = resize(win_width)
+win_height = resize(win_height)
 win_size = resize(win_size)
-cell_size = round(cell_size * size_mult)
+cell_size = resize(cell_size)
 
-x_cells = int(win_size[0] / cell_size)
-y_cells = int(win_size[1] / cell_size)
+x_cells = int(win_width / cell_size)
+y_cells = int(win_height / cell_size)
 
 window = pygame.display.set_mode(win_size)
 
@@ -40,20 +44,30 @@ class Snake:
                       "left": [-1, 0],
                       "right": [1, 0]}
         self.score = 0
-        self.head = [16, 8]
-        self.snake = [[16, 10], [16, 9], self.head]
+        self.head = [x_cells // 2, y_cells // 2]
+        self.snake = [[x_cells // 2, y_cells // 2 + 2], [x_cells // 2, y_cells // 2 + 1], self.head]
         self.move_round = "up"
 
     def get_score(self):
         return self.score
 
+    def score_events(self, apple_list):
+        if self.score % 20 == 0:
+            apple_list.append(Apple())
+
     def render(self):
-        for block in self.snake:
+        """Отрисовка змеи"""
+        for num, block in enumerate(self.snake):
+            # Головы
             if block == self.head:
                 pygame.draw.rect(screen, [0, 160, 0],
                                  (*[cord * cell_size for cord in block], cell_size, cell_size))
+            # Тела
+            elif (num % 5) == 0:
+                pygame.draw.rect(screen, [153, 255, 71],
+                                 (*[cord * cell_size for cord in block], cell_size, cell_size))
             else:
-                pygame.draw.rect(screen, [0, 200, 0],
+                pygame.draw.rect(screen, [86, 230, 15],
                                  (*[cord * cell_size for cord in block], cell_size, cell_size))
 
     def move(self, apple_list):
@@ -61,11 +75,11 @@ class Snake:
 
         if (pushed_keys[pygame.K_w] or pushed_keys[pygame.K_UP]) and self.move_round != "down":
             self.move_round = "up"
-        if (pushed_keys[pygame.K_s] or pushed_keys[pygame.K_DOWN]) and self.move_round != "up":
+        elif (pushed_keys[pygame.K_s] or pushed_keys[pygame.K_DOWN]) and self.move_round != "up":
             self.move_round = "down"
-        if (pushed_keys[pygame.K_d] or pushed_keys[pygame.K_RIGHT]) and self.move_round != "left":
+        elif (pushed_keys[pygame.K_d] or pushed_keys[pygame.K_RIGHT]) and self.move_round != "left":
             self.move_round = "right"
-        if (pushed_keys[pygame.K_a] or pushed_keys[pygame.K_LEFT]) and self.move_round != "right":
+        elif (pushed_keys[pygame.K_a] or pushed_keys[pygame.K_LEFT]) and self.move_round != "right":
             self.move_round = "left"
 
         self.head = [self.head[0] + self.moves[self.move_round][0], self.head[1] + self.moves[self.move_round][1]]
@@ -78,7 +92,9 @@ class Snake:
                 self.score += 1
                 apple_eaten = True
 
-        if not apple_eaten:
+        if apple_eaten:
+            self.score_events(apple_list)
+        else:
             self.snake.pop(0)
 
     def check_apple_contact(self, apple):
@@ -93,6 +109,10 @@ class Snake:
             return True
         return False
 
+    def check_win(self):
+        if self.score >= (x_cells * y_cells) - 3:
+            return True
+        return False
 
 class Apple:
     def __init__(self):
@@ -100,7 +120,7 @@ class Apple:
         self.y = randint(0, y_cells - 1)
         self.color = [255, 0, 0]
 
-    def render(self, cell_size):
+    def render(self):
         pygame.draw.circle(screen, self.color,
                            (self.x * cell_size + cell_size // 2 + 1, self.y * cell_size + cell_size // 2 + 1),
                            cell_size // 2 - 3)
@@ -117,17 +137,17 @@ class Apple:
             self.y = randint(1, y_cells - 1)
 
 
-def render_field(window_size, cell_size):
+def render_field():
     depth = 2
     for x in range(0, x_cells + 1):
-        pygame.draw.line(screen, [0, 0, 0], [x * cell_size, 0], [x * cell_size, window_size[1]], depth)
+        pygame.draw.line(screen, [0, 0, 0], [x * cell_size, 0], [x * cell_size, win_height], depth)
     for y in range(0, y_cells + 1):
-        pygame.draw.line(screen, [0, 0, 0], [0, y * cell_size], [window_size[0], y * cell_size], depth)
+        pygame.draw.line(screen, [0, 0, 0], [0, y * cell_size], [win_width, y * cell_size], depth)
 
 
 def show_score(score):
     text = font.render(f"Score:{str(score).zfill(2)}", 1, (0, 0, 0), [144, 238, 144])
-    text_pos = (round(win_size[0] / 2 - 143), round(win_size[1] / 2 - 33))
+    text_pos = (text.get_rect(center=(win_width//2, win_height // 2 - 33)))
 
     screen.blit(text, text_pos)
 
@@ -143,23 +163,28 @@ def start_game():
             if e.type == pygame.QUIT or pygame.key.get_pressed()[pygame.K_ESCAPE]:
                 running_game = False
 
-        if not snek.check_death():
-            screen.fill([144, 238, 144])
+        if pygame.key.get_pressed()[pygame.K_r]:
+            snek = Snake()
+            apple_list = [Apple()]
+
+        if not snek.check_death() and not snek.check_win():
+            screen.fill([153, 255, 153])
 
             for apple in apple_list:
-                apple.render(cell_size)
+                apple.render()
 
             snek.move(apple_list)
-
             snek.render()
 
-            render_field(win_size, cell_size)
+            render_field()
 
             window.blit(screen, [0, 0])
         else:
-
-            text = font.render("You Lose", 1, (0, 0, 0), [144, 238, 144])
-            screen.blit(text, (round(win_size[0] / 2 - 143), round(win_size[1] / 2 - 70)))
+            if snek.check_death():
+                text = font.render("You Lose", 1, (0, 0, 0), [144, 238, 144])
+            elif snek.check_win():
+                text = font.render("You WIN!", 1, (0, 0, 0), [144, 238, 144])
+            screen.blit(text, text.get_rect(center=(win_width//2, win_height // 2 - 70)))
 
             show_score(snek.get_score())
 
