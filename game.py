@@ -114,6 +114,7 @@ class Snake:
             return True
         return False
 
+
 class Apple:
     def __init__(self):
         self.x = randint(0, x_cells - 1)
@@ -147,7 +148,7 @@ def render_field():
 
 def show_score(score):
     text = font.render(f"Score:{str(score).zfill(2)}", 1, (0, 0, 0), [144, 238, 144])
-    text_pos = (text.get_rect(center=(win_width//2, win_height // 2 - 33)))
+    text_pos = (text.get_rect(center=(win_width // 2, win_height // 2 - 33)))
 
     screen.blit(text, text_pos)
 
@@ -184,7 +185,7 @@ def start_game():
                 text = font.render("You Lose", 1, (0, 0, 0), [144, 238, 144])
             elif snek.check_win():
                 text = font.render("You WIN!", 1, (0, 0, 0), [144, 238, 144])
-            screen.blit(text, text.get_rect(center=(win_width//2, win_height // 2 - 70)))
+            screen.blit(text, text.get_rect(center=(win_width // 2, win_height // 2 - 70)))
 
             show_score(snek.get_score())
 
