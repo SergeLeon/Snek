@@ -64,7 +64,7 @@ class Snake:
                                  (*[cord * cell_size for cord in block], cell_size, cell_size))
             # Тела
             elif (num % 5) == 0:
-                pygame.draw.rect(screen, [153, 255, 71],
+                pygame.draw.rect(screen, [93, 195, 11],
                                  (*[cord * cell_size for cord in block], cell_size, cell_size))
             else:
                 pygame.draw.rect(screen, [86, 230, 15],
@@ -147,7 +147,7 @@ def render_field():
 
 
 def show_score(score):
-    text = font.render(f"Score:{str(score).zfill(2)}", 1, (0, 0, 0), [144, 238, 144])
+    text = font.render(f"Score:{score}", 1, (0, 0, 0), [144, 238, 144])
     text_pos = (text.get_rect(center=(win_width // 2, win_height // 2 - 33)))
 
     screen.blit(text, text_pos)
